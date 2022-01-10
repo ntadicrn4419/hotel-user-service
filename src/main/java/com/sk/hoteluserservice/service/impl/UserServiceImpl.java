@@ -25,9 +25,10 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, TokenService tokenService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.tokenService = tokenService;
     }
 
     @Override

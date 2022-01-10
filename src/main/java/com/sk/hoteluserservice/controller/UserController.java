@@ -43,6 +43,7 @@ public class UserController {
         return new ResponseEntity<>(userService.findAll(pageable), HttpStatus.OK);
     }
 
+
     @ApiOperation(value = "Register user")
     @PostMapping
     public ResponseEntity<UserDto> saveUser(@RequestBody @Valid UserCreateDto userCreateDto) {
@@ -65,5 +66,6 @@ public class UserController {
     public ResponseEntity<TokenResponseDto> loginUser(@RequestBody @Valid TokenRequestDto tokenRequestDto) {
         return new ResponseEntity<>(userService.login(tokenRequestDto), HttpStatus.OK);
     }
+
 }
 
