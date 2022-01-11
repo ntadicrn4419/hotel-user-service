@@ -24,6 +24,8 @@ public class User {
     //for managers
     private String hotelName;
     private Date hireDate;
+    //for admin to set
+    private boolean blocked = false;
 
 
     public Long getId() {
@@ -125,5 +127,14 @@ public class User {
 
     public void setHireDate(Date hireDate) {
         this.hireDate = hireDate;
+    }
+
+    //for admin to manipulate
+    public boolean isBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
 }

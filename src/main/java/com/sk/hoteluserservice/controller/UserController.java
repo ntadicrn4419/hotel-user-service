@@ -1,9 +1,6 @@
 package com.sk.hoteluserservice.controller;
 
-import com.sk.hoteluserservice.dto.TokenRequestDto;
-import com.sk.hoteluserservice.dto.TokenResponseDto;
-import com.sk.hoteluserservice.dto.UserCreateDto;
-import com.sk.hoteluserservice.dto.UserDto;
+import com.sk.hoteluserservice.dto.*;
 import com.sk.hoteluserservice.security.CheckSecurity;
 import com.sk.hoteluserservice.service.UserService;
 import io.swagger.annotations.ApiImplicitParam;
@@ -43,29 +40,57 @@ public class UserController {
         return new ResponseEntity<>(userService.findAll(pageable), HttpStatus.OK);
     }
 
-
-    @ApiOperation(value = "Register user")
-    @PostMapping
-    public ResponseEntity<UserDto> saveUser(@RequestBody @Valid UserCreateDto userCreateDto) {
-        return new ResponseEntity<>(userService.add(userCreateDto), HttpStatus.CREATED);
+    @GetMapping("/{id}/discount")
+    public ResponseEntity<DiscountDto> getDiscount(@PathVariable("id") Long id) {
+        return new ResponseEntity<>(userService.findDiscount(id), HttpStatus.OK);
     }
 
-//    @ApiOperation(value = "Register client")
-//    @PostMapping
-//    public ResponseEntity<UserDto> saveClient(@RequestBody @Valid UserCreateDto userCreateDto) {
-//        return new ResponseEntity<>(userService.add(userCreateDto), HttpStatus.CREATED);
-//    }
-//    @ApiOperation(value = "Register manager")
-//    @PostMapping
-//    public ResponseEntity<UserDto> saveManager(@RequestBody @Valid UserCreateDto userCreateDto) {
-//        return new ResponseEntity<>(userService.add(userCreateDto), HttpStatus.CREATED);
-//    }
+    @PostMapping("/forbiddAccess")
+    @CheckSecurity(roles = {"ROLE_ADMIN"})
+    public ResponseEntity<Boolean> forbiddAccess(@RequestHeader("Authorization") String authorization,
+                                                       @RequestBody @Valid UserForbiddDto userForbiddDto) {
+
+        return new ResponseEntity<>(userService.blockAccess(userForbiddDto), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Register client")
+    @PostMapping("/registerClient")
+    public ResponseEntity<UserDto> saveClient(@RequestBody @Valid ClientCreateDto clientCreateDto) {
+        return new ResponseEntity<>(userService.addClient(clientCreateDto), HttpStatus.CREATED);
+    }
+    @ApiOperation(value = "Register manager")
+    @PostMapping("/registerManager")
+    public ResponseEntity<UserDto> saveManager(@RequestBody @Valid ManagerCreateDto managerCreateDto) {
+        return new ResponseEntity<>(userService.addManager(managerCreateDto), HttpStatus.CREATED);
+    }
+    @ApiOperation(value = "Update manager")
+    @PutMapping("/updateManager")
+    @CheckSecurity(roles = {"ROLE_MANAGER"})
+    public ResponseEntity<UserDto> updateManager(@RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid ManagerUpdateDto managerUpdateDto) {
+        return new ResponseEntity<>(userService.updateManager(managerUpdateDto), HttpStatus.CREATED);
+    }
+
+    @ApiOperation(value = "Update client")
+    @PutMapping("/updateClient")
+    @CheckSecurity(roles = {"ROLE_CLIENT"})
+    public ResponseEntity<UserDto> updateClient(@RequestHeader("Authorization") String authorization,
+            @RequestBody @Valid ClientUpdateDto clientUpdateDto) {
+        return new ResponseEntity<>(userService.updateClient(clientUpdateDto), HttpStatus.CREATED);
+    }
 
     @ApiOperation(value = "Login")
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDto> loginUser(@RequestBody @Valid TokenRequestDto tokenRequestDto) {
-        return new ResponseEntity<>(userService.login(tokenRequestDto), HttpStatus.OK);
+        TokenResponseDto tokenResponseDto = userService.login(tokenRequestDto);
+        if(tokenResponseDto != null){
+            return new ResponseEntity<>(tokenResponseDto, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
     }
+
+
+
 
 }
 

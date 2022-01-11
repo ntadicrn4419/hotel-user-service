@@ -1,12 +1,11 @@
 package com.sk.hoteluserservice.service.impl;
 
+import com.sk.hoteluserservice.domain.ClientRank;
 import com.sk.hoteluserservice.domain.User;
-import com.sk.hoteluserservice.dto.TokenRequestDto;
-import com.sk.hoteluserservice.dto.TokenResponseDto;
-import com.sk.hoteluserservice.dto.UserCreateDto;
-import com.sk.hoteluserservice.dto.UserDto;
+import com.sk.hoteluserservice.dto.*;
 import com.sk.hoteluserservice.exception.NotFoundException;
 import com.sk.hoteluserservice.mapper.UserMapper;
+import com.sk.hoteluserservice.repository.ClientRankRepository;
 import com.sk.hoteluserservice.repository.UserRepository;
 import com.sk.hoteluserservice.security.service.TokenService;
 import com.sk.hoteluserservice.service.UserService;
@@ -17,18 +16,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
 
     private TokenService tokenService;
     private UserRepository userRepository;
+    private ClientRankRepository clientRankRepository;
     private UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, TokenService tokenService) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, TokenService tokenService, ClientRankRepository clientRankRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.tokenService = tokenService;
+        this.clientRankRepository = clientRankRepository;
     }
 
     @Override
@@ -38,11 +41,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto add(UserCreateDto userCreateDto) {
-        User user = userMapper.userCreateDtoToUser(userCreateDto);
+    public UserDto addClient(ClientCreateDto clientCreateDto) {
+        User user = userMapper.clientCreateDtoToUserClient(clientCreateDto);
         userRepository.save(user);
         return userMapper.userToUserDto(user);
     }
+    @Override
+    public UserDto addManager(ManagerCreateDto managerCreateDto) {
+        User user = userMapper.managerCreateDtoToUserManager(managerCreateDto);
+        userRepository.save(user);
+        return userMapper.userToUserDto(user);
+    }
+
     @Override
     public TokenResponseDto login(TokenRequestDto tokenRequestDto) {
         //Try to find active user for specified credentials
@@ -51,6 +61,10 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new NotFoundException(String
                         .format("User with username: %s and password: %s not found.", tokenRequestDto.getUsername(),
                                 tokenRequestDto.getPassword())));
+        if(user.isBlocked()){
+            System.out.println("User with username:" +  tokenRequestDto.getUsername() + " and email: " + user.getEmail() + " is blocked");
+            return null;
+        }
         //Create token payload
         Claims claims = Jwts.claims();
         claims.put("id", user.getId());
@@ -58,4 +72,81 @@ public class UserServiceImpl implements UserService {
         //Generate token
         return new TokenResponseDto(tokenService.generate(claims));
     }
+
+    @Override
+    public boolean blockAccess(UserForbiddDto userForbiddDto) {
+        User user = userRepository
+                .findUserByUsernameAndEmail(userForbiddDto.getUsername(), userForbiddDto.getEmail())
+                .orElseThrow(() -> new NotFoundException(String
+                        .format("User with username: %s and email: %s not found.", userForbiddDto.getUsername(),
+                                userForbiddDto.getEmail())));
+        user.setBlocked(userForbiddDto.isBlocked());
+        return true;
+    }
+
+    @Override
+    public UserDto updateManager(ManagerUpdateDto managerUpdateDto) {
+        User user = userRepository
+                .findUserByUsernameAndPassword(managerUpdateDto.getOldUsername(), managerUpdateDto.getOldPassword())
+                .orElseThrow(() -> new NotFoundException(String
+                        .format("User with username: %s and password: %s not found.", managerUpdateDto.getOldUsername(),
+                                managerUpdateDto.getOldPassword())));
+        user.setUsername(managerUpdateDto.getNewUsername());
+        user.setPassword(managerUpdateDto.getNewPassword());
+        user.setEmail(managerUpdateDto.getNewEmail());
+        user.setPhone(managerUpdateDto.getNewPhone());
+        user.setFirstname(managerUpdateDto.getNewFirstName());
+        user.setLastname(managerUpdateDto.getNewLastName());
+        user.setHotelName(managerUpdateDto.getNewHotelName());
+        user.setHireDate(managerUpdateDto.getNewHireDate());
+
+        return userMapper.userToUserDto(user);
+    }
+
+    @Override
+    public UserDto updateClient(ClientUpdateDto clientUpdateDto) {
+        User user = userRepository
+                .findUserByUsernameAndPassword(clientUpdateDto.getOldUsername(), clientUpdateDto.getOldPassword())
+                .orElseThrow(() -> new NotFoundException(String
+                        .format("User with username: %s and password: %s not found.", clientUpdateDto.getOldUsername(),
+                                clientUpdateDto.getOldPassword())));
+        user.setUsername(clientUpdateDto.getNewUsername());
+        user.setPassword(clientUpdateDto.getNewPassword());
+        user.setEmail(clientUpdateDto.getNewEmail());
+        user.setPhone(clientUpdateDto.getNewPhone());
+        user.setFirstname(clientUpdateDto.getNewFirstName());
+        user.setLastname(clientUpdateDto.getNewLastName());
+        user.setNumberOfReservations(clientUpdateDto.getNewNumberOfReservations());
+        user.setPassportNumber(clientUpdateDto.getNewPassportNumber());
+
+        return userMapper.userToUserDto(user);
+    }
+
+    @Override
+    public DiscountDto findDiscount(Long id) {
+        User user = userRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException(String
+                        .format("User with id: %d not found.", id)));
+        List<ClientRank> clientRankList = clientRankRepository.findAll();
+
+        Integer discount = clientRankList.stream()
+                .filter(clientRank -> clientRank.getMaxNumberOfReservations() >= user.getNumberOfReservations()
+                        && clientRank.getMinNumberOfReservations() <= user.getNumberOfReservations())
+                .findAny()
+                .get()
+                .getDiscount();
+        return new DiscountDto(discount);
+    }
+
+
+
+
+
+
+
+
+
+
+
 }

@@ -105,4 +105,21 @@ public class UserDto {
     public void setHireDate(Date hireDate) {
         this.hireDate = hireDate;
     }
+
+    @Override
+    public String toString() {
+        return "UserDto{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", username='" + username + '\'' +
+                ", birthDate=" + birthDate +
+                ", phone='" + phone + '\'' +
+                ", passportNumber='" + passportNumber + '\'' +
+                ", numberOfReservations=" + numberOfReservations +
+                ", hotelName='" + hotelName + '\'' +
+                ", hireDate=" + hireDate +
+                '}';
+    }
 }
