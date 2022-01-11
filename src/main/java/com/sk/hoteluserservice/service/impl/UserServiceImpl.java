@@ -1,5 +1,7 @@
 package com.sk.hoteluserservice.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sk.hoteluserservice.domain.ClientRank;
 import com.sk.hoteluserservice.domain.User;
 import com.sk.hoteluserservice.dto.*;
@@ -11,8 +13,10 @@ import com.sk.hoteluserservice.security.service.TokenService;
 import com.sk.hoteluserservice.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,12 +30,20 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private ClientRankRepository clientRankRepository;
     private UserMapper userMapper;
+    private JmsTemplate jmsTemplate;
+    private ObjectMapper objectMapper;
+    private String userRegistratedMessageDestination;
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, TokenService tokenService, ClientRankRepository clientRankRepository) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, TokenService tokenService,
+                           ClientRankRepository clientRankRepository, JmsTemplate jmsTemplate,
+                           ObjectMapper objectMapper, @Value("${destination.user.registrated.message}")String userRegistratedMessageDestination) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.tokenService = tokenService;
         this.clientRankRepository = clientRankRepository;
+        this.jmsTemplate = jmsTemplate;
+        this.objectMapper = objectMapper;
+        this.userRegistratedMessageDestination = userRegistratedMessageDestination;
     }
 
     @Override
@@ -44,12 +56,20 @@ public class UserServiceImpl implements UserService {
     public UserDto addClient(ClientCreateDto clientCreateDto) {
         User user = userMapper.clientCreateDtoToUserClient(clientCreateDto);
         userRepository.save(user);
+        //send message to the notification service
+        try {
+            jmsTemplate.convertAndSend(userRegistratedMessageDestination,
+                    objectMapper.writeValueAsString(new UserRegistratedDto(user.getId())));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         return userMapper.userToUserDto(user);
     }
     @Override
     public UserDto addManager(ManagerCreateDto managerCreateDto) {
         User user = userMapper.managerCreateDtoToUserManager(managerCreateDto);
         userRepository.save(user);
+        //send message to the notification service
         return userMapper.userToUserDto(user);
     }
 
