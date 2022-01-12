@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
 
     public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, TokenService tokenService,
                            ClientRankRepository clientRankRepository, JmsTemplate jmsTemplate,
-                           ObjectMapper objectMapper, @Value("${destination.user.registrated.message}")String userRegistratedMessageDestination) {
+                           ObjectMapper objectMapper, @Value("${destination.message}")String userRegistratedMessageDestination) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.tokenService = tokenService;
@@ -57,10 +57,10 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.clientCreateDtoToUserClient(clientCreateDto);
         userRepository.save(user);
         //send message to the notification service
-        String content = "Postovani " + user.getFirstname() + " " + user.getLastname() + ", \n" + "Kliknite na link za aktiviranje naloga.";
         try {
             jmsTemplate.convertAndSend(userRegistratedMessageDestination,
-                    objectMapper.writeValueAsString(new NotificationDto(user.getEmail(), "activation email", content)));
+                    objectMapper.writeValueAsString(new NotificationDto(user.getEmail(), "activation email",
+                            "ACTIVATION_EMAIL", user.getFirstname(), user.getLastname())));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -71,10 +71,10 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.managerCreateDtoToUserManager(managerCreateDto);
         userRepository.save(user);
         //send message to the notification service
-        String content = "Postovani " + user.getFirstname() + " " + user.getLastname() + ", \n" + "Kliknite na link za aktiviranje naloga.";
         try {
             jmsTemplate.convertAndSend(userRegistratedMessageDestination,
-                    objectMapper.writeValueAsString(new NotificationDto(user.getEmail(), "activation email", content)));
+                    objectMapper.writeValueAsString(new NotificationDto(user.getEmail(), "activation email",
+                            "ACTIVATION_EMAIL", user.getFirstname(), user.getLastname())));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
