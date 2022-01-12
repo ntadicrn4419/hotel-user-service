@@ -57,9 +57,10 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.clientCreateDtoToUserClient(clientCreateDto);
         userRepository.save(user);
         //send message to the notification service
+        String content = "Postovani " + user.getFirstname() + " " + user.getLastname() + ", \n" + "Kliknite na link za aktiviranje naloga.";
         try {
             jmsTemplate.convertAndSend(userRegistratedMessageDestination,
-                    objectMapper.writeValueAsString(new UserRegistratedDto(user.getId())));
+                    objectMapper.writeValueAsString(new NotificationDto(user.getEmail(), "activation email", content)));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -70,6 +71,13 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.managerCreateDtoToUserManager(managerCreateDto);
         userRepository.save(user);
         //send message to the notification service
+        String content = "Postovani " + user.getFirstname() + " " + user.getLastname() + ", \n" + "Kliknite na link za aktiviranje naloga.";
+        try {
+            jmsTemplate.convertAndSend(userRegistratedMessageDestination,
+                    objectMapper.writeValueAsString(new NotificationDto(user.getEmail(), "activation email", content)));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         return userMapper.userToUserDto(user);
     }
 
