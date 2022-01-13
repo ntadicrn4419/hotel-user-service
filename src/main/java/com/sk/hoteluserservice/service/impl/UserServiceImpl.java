@@ -59,7 +59,7 @@ public class UserServiceImpl implements UserService {
         //send message to the notification service
         try {
             jmsTemplate.convertAndSend(userRegistratedMessageDestination,
-                    objectMapper.writeValueAsString(new NotificationDto(user.getEmail(), "activation email",
+                    objectMapper.writeValueAsString(new NotificationDto(user.getId(), user.getEmail(), "activation email",
                             "ACTIVATION_EMAIL", user.getFirstname(), user.getLastname())));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -73,7 +73,7 @@ public class UserServiceImpl implements UserService {
         //send message to the notification service
         try {
             jmsTemplate.convertAndSend(userRegistratedMessageDestination,
-                    objectMapper.writeValueAsString(new NotificationDto(user.getEmail(), "activation email",
+                    objectMapper.writeValueAsString(new NotificationDto(user.getId(), user.getEmail(), "activation email",
                             "ACTIVATION_EMAIL", user.getFirstname(), user.getLastname())));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
