@@ -17,4 +17,6 @@ public interface UserService {
     Boolean incrementReservations(String authorization);
 
     Boolean decrementReservations(String authorization);
+
+    UserDto findById(Long id);
 }
