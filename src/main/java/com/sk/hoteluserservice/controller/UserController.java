@@ -32,6 +32,11 @@ public class UserController {
                     value = "Sorting criteria in the format: property(,asc|desc). " +
                             "Default sort order is ascending. " +
                             "Multiple sort criteria are supported.")})
+//    @GetMapping
+//    public ResponseEntity<Page<UserDto>> getAllUsers(Pageable pageable) { //PRIMER ZA API GATEWAY
+//
+//        return new ResponseEntity<>(userService.findAll(pageable), HttpStatus.OK);
+//    }
     @GetMapping
     @CheckSecurity(roles = {"ROLE_ADMIN", "ROLE_CLIENT", "ROLE_MANAGER"})
     public ResponseEntity<Page<UserDto>> getAllUsers(@RequestHeader("Authorization") String authorization,
