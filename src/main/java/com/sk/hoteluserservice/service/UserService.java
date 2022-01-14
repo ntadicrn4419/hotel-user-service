@@ -13,4 +13,8 @@ public interface UserService {
     UserDto updateManager(ManagerUpdateDto managerUpdateDto);
     UserDto updateClient(ClientUpdateDto clientUpdateDto);
     DiscountDto findDiscount(Long id);
+
+    Boolean incrementReservations(String authorization);
+
+    Boolean decrementReservations(String authorization);
 }

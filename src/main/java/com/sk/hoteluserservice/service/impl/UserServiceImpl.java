@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -167,14 +168,41 @@ public class UserServiceImpl implements UserService {
         return new DiscountDto(discount);
     }
 
+    @Override
+    public Boolean incrementReservations(String authorization) {
+        //auth[0] = "Bearer" -> zato splitujemo authorization
+        String[] auth = authorization.split(" ");
+        String token = auth[1];
+        Claims claims = tokenService.parseToken(token);
+        Integer intId = claims.get("id", Integer.class);
+        Long userId = Long.valueOf(intId);
 
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new NotFoundException(String
+                        .format("User with id: %d not found.", userId)));
+        user.setNumberOfReservations(user.getNumberOfReservations() + 1);
+        userRepository.save(user);
+        return true;
+    }
 
+    @Override
+    public Boolean decrementReservations(String authorization) {
+        //auth[0] = "Bearer" -> zato splitujemo authorization
+        String[] auth = authorization.split(" ");
+        String token = auth[1];
+        Claims claims = tokenService.parseToken(token);
+        Integer intId = claims.get("id", Integer.class);
+        Long userId = Long.valueOf(intId);
 
-
-
-
-
-
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new NotFoundException(String
+                        .format("User with id: %d not found.", userId)));
+        user.setNumberOfReservations(user.getNumberOfReservations() - 1);
+        userRepository.save(user);
+        return true;
+    }
 
 
 }

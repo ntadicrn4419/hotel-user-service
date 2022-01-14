@@ -44,11 +44,19 @@ public class UserController {
     public ResponseEntity<DiscountDto> getDiscount(@PathVariable("id") Long id) {
         return new ResponseEntity<>(userService.findDiscount(id), HttpStatus.OK);
     }
+    @GetMapping("/incrementReservationNumber")
+    public ResponseEntity<Boolean> incrementReservationNumber(@RequestHeader("Authorization") String authorization){
+        return new ResponseEntity<>(userService.incrementReservations(authorization), HttpStatus.OK);
+    }
+    @GetMapping("/decrementReservationNumber")
+    public ResponseEntity<Boolean> decrementReservationNumber(@RequestHeader("Authorization") String authorization){
+        return new ResponseEntity<>(userService.decrementReservations(authorization), HttpStatus.OK);
+    }
 
-    @PostMapping("/forbiddAccess")
+    @PostMapping("/forbidAccess")
     @CheckSecurity(roles = {"ROLE_ADMIN"})
-    public ResponseEntity<Boolean> forbiddAccess(@RequestHeader("Authorization") String authorization,
-                                                       @RequestBody @Valid UserForbiddDto userForbiddDto) {
+    public ResponseEntity<Boolean> forbidAccess(@RequestHeader("Authorization") String authorization,
+                                                @RequestBody @Valid UserForbiddDto userForbiddDto) {
 
         return new ResponseEntity<>(userService.blockAccess(userForbiddDto), HttpStatus.OK);
     }
